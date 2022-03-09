@@ -4,6 +4,7 @@ import Header from './Header';
 import Footer from './Footer';
 import Wallet from './Wallet';
 import NewOrder from './NewOrder';
+import AllOrders from './AllOrders';
 
 const SIDE = {
   BUY: 0,
@@ -111,6 +112,25 @@ function App({ web3, accounts, contracts }) {
     const orders = await getOrders(user.selectedToken);
     setOrders(orders);
   };
+
+  useEffect(() => {
+    const init = async () => {
+      const [balances, orders] = await Promise.all([
+        getBalances(
+          user.accounts[0], 
+          user.selectedToken
+        ),
+        getOrders(user.selectedToken),
+      ]);
+      setUser(user => ({ ...user, balances}));
+      setOrders(orders);
+    }
+
+    if (typeof user.selectedToken !== 'undefined') {
+      init();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.selectedToken]);
   
   if(user.selectedToken === undefined) {
     return <div>Loading...</div>;
@@ -130,6 +150,11 @@ function App({ web3, accounts, contracts }) {
               />
             ) : null}
           </div>
+          {user.selectedToken.ticker !== 'DAI' ? (
+            <div className="col-sm-8">
+              <AllOrders orders={orders}/>
+            </div>
+          ) : null}
         </div>
       </main>
       <Footer />
