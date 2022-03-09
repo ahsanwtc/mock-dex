@@ -1,4 +1,7 @@
 const path = require('path');
+const provider = require('@truffle/hdwallet-provider');
+
+const secrets = require('./secrets.json');
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -36,6 +39,15 @@ module.exports = {
    */
   contracts_build_directory: path.join(__dirname, 'client/src/contracts'),
   networks: {
+    rinkeby: {
+      provider: () => new provider(
+        secrets.privateKeys,
+        'https://rinkeby.infura.io/v3/0d55130009264ca89cd236b4dd7f0513',
+        0,
+        3
+      ),
+      network_id: 4
+    }
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
