@@ -39,15 +39,15 @@ contract('Dex', accounts => {
       await token.approve(dex.address, amount, { from: trader });
     };
 
-    await seedTokenBalance(dai, trader1)
-    await seedTokenBalance(bat, trader1)
-    await seedTokenBalance(rep, trader1)
-    await seedTokenBalance(zrx, trader1)
+    await seedTokenBalance(dai, trader1);
+    await seedTokenBalance(bat, trader1);
+    await seedTokenBalance(rep, trader1);
+    await seedTokenBalance(zrx, trader1);
 
-    await seedTokenBalance(dai, trader2)
-    await seedTokenBalance(bat, trader2)
-    await seedTokenBalance(rep, trader2)
-    await seedTokenBalance(zrx, trader2)
+    await seedTokenBalance(dai, trader2);
+    await seedTokenBalance(bat, trader2);
+    await seedTokenBalance(rep, trader2);
+    await seedTokenBalance(zrx, trader2);
     // await Promise.all([dai, bat, rep, zrx].map(token => seedTokenBalance(token, trader1)));
     // await Promise.all([dai, bat, rep, zrx].map(token => seedTokenBalance(token, trader2)));
 
