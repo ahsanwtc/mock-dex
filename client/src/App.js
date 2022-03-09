@@ -3,12 +3,19 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Wallet from './Wallet';
+import NewOrder from './NewOrder';
+
+const SIDE = {
+  BUY: 0,
+  SELL: 1
+};
 
 function App({ web3, accounts, contracts }) {
   const [tokens, setTokens] = useState([]);
   const [user, setUser] = useState({ accounts: [], selectedToken: undefined,  balances: { tokenDex: 0, tokenWallet: 0 }});
 
   const selectToken = token => setUser({ ...user, selectedToken: token });
+  const [orders, setOrders] = useState({ buy: [], sell: [] });
 
   useEffect(() => {
     const init = async () => {
@@ -17,8 +24,12 @@ function App({ web3, accounts, contracts }) {
         ...token,
         ticker: web3.utils.hexToUtf8(token.ticker)
       }));
-      const balances = await getBalances(accounts[0], tokens[0]);
+      const [balances, orders] = await Promise.all([
+        getBalances(accounts[0], tokens[0]),
+        getOrders(tokens[0]),
+      ]);
       setTokens(tokens);
+      setOrders(orders);
       setUser({ accounts, selectedToken: tokens[0], balances });
     }
     init();
@@ -34,6 +45,18 @@ function App({ web3, accounts, contracts }) {
       .balanceOf(account)
       .call();
     return { tokenDex, tokenWallet };
+  };
+
+  const getOrders = async token => {
+    const orders = await Promise.all([
+      contracts.dex.methods
+        .getOrders(web3.utils.fromAscii(token.ticker), SIDE.BUY)
+        .call(),
+      contracts.dex.methods
+        .getOrders(web3.utils.fromAscii(token.ticker), SIDE.SELL)
+        .call(),
+    ]);
+    return { buy: orders[0], sell: orders[1] };
   }
 
   const deposit = async amount => {
@@ -48,7 +71,7 @@ function App({ web3, accounts, contracts }) {
       user.selectedToken
     );
     setUser(user => ({ ...user, balances }));
-  }
+  };
 
   const withdraw = async amount => {
     await contracts.dex.methods
@@ -62,7 +85,32 @@ function App({ web3, accounts, contracts }) {
       user.selectedToken
     );
     setUser(user => ({ ...user, balances }));
-  }
+  };
+
+  const createMarketOrder = async (amount, side) => {
+    await contracts.dex.methods
+      .createMarketOrder(
+        web3.utils.fromAscii(user.selectedToken.ticker),
+        amount,
+        side
+      )
+      .send({ from: user.accounts[0] });
+    const orders = await getOrders(user.selectedToken);
+    setOrders(orders);
+  };
+
+  const createLimitOrder = async (amount, price, side) => {
+    await contracts.dex.methods
+      .createLimitOrder(
+        web3.utils.fromAscii(user.selectedToken.ticker),
+        amount,
+        price,
+        side
+      )
+      .send({ from: user.accounts[0] });
+    const orders = await getOrders(user.selectedToken);
+    setOrders(orders);
+  };
   
   if(user.selectedToken === undefined) {
     return <div>Loading...</div>;
@@ -75,6 +123,12 @@ function App({ web3, accounts, contracts }) {
         <div className="row">
           <div className="col-sm-4 first-col">
             <Wallet user={user} deposit={deposit} withdraw={withdraw}/>
+            {user.selectedToken.ticker !== 'DAI' ? (
+              <NewOrder 
+                createMarketOrder={createMarketOrder}
+                createLimitOrder={createLimitOrder}
+              />
+            ) : null}
           </div>
         </div>
       </main>
