@@ -21,6 +21,7 @@ function App({ web3, accounts, contracts }) {
     }
     init();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   if(user.selectedToken === undefined) {
